@@ -1,0 +1,13 @@
+{
+  "required": false,
+  "minVersion": "0.8",
+  "package": "com.lai.emipagedbookmarks.mixin",
+  "plugin": "com.lai.emipagedbookmarks.mixin.EmiMixinConfigPlugin",
+  "compatibilityLevel": "JAVA_17",
+  "client": [
+    "EmiFavoritesMixin",
+    "EmiSidebarsMixin",
+    "EmiScreenManagerMixin",
+    "SidebarPanelMixin"
+  ]
+}
