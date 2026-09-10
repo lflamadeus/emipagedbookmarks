@@ -76,11 +76,9 @@ public final class GroupOverlay {
     private static final int HOVER_TINT = 0xFFE34D;
 
     /** 可平铺的灰阶草地：按绝对坐标取样，再乘分组强调色。 */
-    private static final ResourceLocation FIELD_TEXTURE =
-            new ResourceLocation("emipagedbookmarks", "textures/gui/group_field.png");
+    private static final ResourceLocation FIELD_TEXTURE = texture("textures/gui/group_field.png");
     /** 可平铺的彩色花层：白色顶点色，保留黄白花。 */
-    private static final ResourceLocation BLOOM_TEXTURE =
-            new ResourceLocation("emipagedbookmarks", "textures/gui/group_bloom.png");
+    private static final ResourceLocation BLOOM_TEXTURE = texture("textures/gui/group_bloom.png");
     /** 贴图边长，同时也是可平铺周期（两张图都是它）。 */
     private static final int FIELD_SIZE = 512;
 
@@ -91,7 +89,7 @@ public final class GroupOverlay {
     private static final byte[] DITHER_LUT = buildLut();
 
     /**
-     * 「生长欲望」的低频调制：{@link #FIELD_SIZE}/{@link #NOISE_LATTICE} = 16px 的环绕点阵，
+     * 「生长欲望」的低频调制：{@link #FIELD_SIZE}/{@code NOISE_LATTICE} = 16px 的环绕点阵，
      * 双线性 + smoothstep 插值。
      *
      * <p>如果每层的保留概率只跟层号有关，一圈边框就是一个<b>处处一样均匀</b>的毛边，看着像
@@ -235,8 +233,8 @@ public final class GroupOverlay {
         }
         int from = Math.min(GroupManager.toVisibleIndex(pageId, anchor), hovered);
         int to = Math.min(Math.max(GroupManager.toVisibleIndex(pageId, anchor), hovered), pageEnd);
-        int border = withAlpha(SELECTION_ACCENT, 0xE0);
-        int fill = withAlpha(SELECTION_ACCENT, 0x18);
+        int border = selectionColor(0xE0);
+        int fill = selectionColor(0x18);
         for (int[] row : rowsOf(space, pageStart, Math.max(from, pageStart), to)) {
             int x = row[0];
             int y = row[1];
@@ -319,12 +317,20 @@ public final class GroupOverlay {
         rectSignature = Long.MIN_VALUE;
     }
 
-    private static int clamp(int value, int min, int max) {
-        return value < min ? min : (value > max ? max : value);
+    /**
+     * 边框厚度（实心行数 / 抖动层数）夹到安全范围。
+     *
+     * <p>上下界是固定的：负值没意义，而一旦超过一个条目的高度，内层图案就会盖住图标。</p>
+     */
+    private static int clampThickness(int value) {
+        if (value < 0) {
+            return 0;
+        }
+        return Math.min(value, ENTRY_SIZE - 1);
     }
 
     private static float clampFloat(float value, float min, float max) {
-        return value < min ? min : (value > max ? max : value);
+        return Math.min(Math.max(value, min), max);
     }
 
     /**

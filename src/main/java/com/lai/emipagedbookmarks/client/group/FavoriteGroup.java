@@ -103,4 +103,16 @@ public final class FavoriteGroup {
         }
         return group;
     }
+
+    /** 读 {@code id}；缺字段或格式不合法都返回 null，由调用方决定怎么兜底。 */
+    private static UUID parseUuid(JsonObject json) {
+        if (!json.has("id")) {
+            return null;
+        }
+        try {
+            return UUID.fromString(json.get("id").getAsString());
+        } catch (IllegalArgumentException exception) {
+            return null;
+        }
+    }
 }

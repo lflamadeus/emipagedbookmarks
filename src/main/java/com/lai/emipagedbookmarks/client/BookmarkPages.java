@@ -550,10 +550,7 @@ public final class BookmarkPages {
             }
             pages.clear();
             for (int i = 0; i < savedPages.size(); i++) {
-                BookmarkPage page = BookmarkPage.fromJson(savedPages.get(i).getAsJsonObject());
-                if (page != null) {
-                    pages.add(page);
-                }
+                pages.add(BookmarkPage.fromJson(savedPages.get(i).getAsJsonObject()));
             }
             currentPage.set(root.has("current_page") ? root.get("current_page").getAsInt() : 0);
             stacks.clear();
@@ -606,7 +603,8 @@ public final class BookmarkPages {
     private static void writeJson(File file, JsonObject root) throws IOException {
         File parent = file.getParentFile();
         if (parent != null) {
-            parent.mkdirs();
+            // createDirectories 失败会抛 IOException，比忽略 mkdirs() 的返回值安全。
+            Files.createDirectories(parent.toPath());
         }
         File tmp = new File(parent, file.getName() + ".tmp");
         try (Writer writer = new BufferedWriter(

@@ -21,7 +21,8 @@ EMI Paged Bookmarks 更新日志
   `BookmarkPages.removeCurrentPage()` 去掉没人用的 boolean 返回值、
   `GroupInteraction` 里可简化的 if、`GroupManager.extractFromGroup` 与 `moveItem` 重复的实现、
   三个 Screen 覆写 `render` 缺 `@Nonnull`、`fillPadding` 永远返回 0（并入 `IntList.padRowTo`）、
-  `GroupOverlay` 里 4 处「参数恒定」的私有方法（贴图 id、clamp 范围、顶点格式、框选色）。
+  `GroupOverlay` 里 4 处「参数恒定」的私有方法（贴图 id、clamp 范围、顶点格式、框选色），
+  以及 `NOISE_LATTICE` 的 Javadoc 里指向自身的那条 `{@link}`（改成 `{@code}`）。
 - `GroupOverlay` 里 `new ResourceLocation(命名空间, 路径)`：IDEA 报「自 1.20.6 起已弃用并标记为移除」
   是**误报**（1.20.1 的类文件里没有该注解，已用 javap 确认；`fromNamespaceAndPath` 要 1.20.6 才有），
   只在那一处加了 `@SuppressWarnings({"deprecation", "removal"})` 并写明原因。

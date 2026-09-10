@@ -89,14 +89,7 @@ public final class BookmarkPage {
     }
 
     public static BookmarkPage fromJson(JsonObject json) {
-        UUID id = null;
-        if (json.has("id")) {
-            try {
-                id = UUID.fromString(json.get("id").getAsString());
-            } catch (IllegalArgumentException exception) {
-                id = null;
-            }
-        }
+        UUID id = parseUuid(json);
         BookmarkPage page = new BookmarkPage(id == null ? UUID.randomUUID() : id,
                 json.has("name") ? json.get("name").getAsString() : "?");
         JsonArray keys = json.getAsJsonArray("bookmarks");
