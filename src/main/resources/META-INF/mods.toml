@@ -28,7 +28,14 @@ accessTransformers = []
 # A list of mods - how many allowed here is determined by the individual mod loader
 [[mods]] #mandatory
 # The modid of the mod
-modId="${mod_id}" #mandatory
+# 这里写死字面量，而不是 ${mod_id}：IDEA 的 Forge 插件**不会**展开 Gradle 占位符，
+# 于是它眼里 modId 就不是 "emipagedbookmarks"，下面 [[dependencies.emipagedbookmarks]]
+# 会全被报成 "Mod emipagedbookmarks is not declared in this file"。
+# 打包时 processResources 的 expand 只替换美元符号开头的占位符，字面量原样保留，两者结果完全一致。
+# 注意：整个文件会被当成 Groovy 模板处理，所以注释里也不能出现「美元符号 + 空格」或「美元符号 +
+# 花括号 + 非简单标识符」的写法，那会让 processResources 解析失败（踩过一次）。
+# （对应常量：EmiPagedBookmarksMod.MOD_ID）
+modId="emipagedbookmarks" #mandatory
 # The version number of the mod
 version="${mod_version}" #mandatory
 # A display name for the mod
@@ -62,6 +69,9 @@ description='''${mod_description}'''
     # Does this dependency have to exist - if not, ordering below must be specified
     mandatory=true #mandatory
     # The version range of the dependency
+    # 下界 47.4 是硬要求：本模组用了 ResourceLocation.fromNamespaceAndPath，
+    # 那是 Forge 47.4.0 才 backport 回 1.20.1 的（更老的 47.x 上没有这个方法）。
+    # 值来自 gradle.properties 的 forge_version_range。
     versionRange="${forge_version_range}" #mandatory
     # An ordering relationship for the dependency - BEFORE or AFTER required if the dependency is not mandatory
     # BEFORE - This mod is loaded BEFORE the dependency

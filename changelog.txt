@@ -1,5 +1,34 @@
 EMI Paged Bookmarks 更新日志
 
+1.0.25 - 2026-09-11
+-------------------
+第二轮 IDEA 报错清理。这一轮修的是**真问题**，含更正上一轮判断错的一处。
+- **[更正] `ResourceLocation` 弃用不是 IDEA 误报。** 上一轮只反编译了 `joined-*-srg.jar`（原版），
+  那里确实没有注解；但 javac 编译用的是 **`forge-1.20.1-47.4.20_mapped_official_1.20.1.jar`**，
+  里面三个旧构造器都带 `@Deprecated(forRemoval = true)` —— 那是 **Forge 47.4.0** 把 1.20.6 的
+  ResourceLocation 工厂方法 backport 回 1.20.1 时顺手标的。已改用官方给的替代品
+  `ResourceLocation.fromNamespaceAndPath(MOD_ID, path)`（反编译确认字节码与原构造器完全一致），
+  并删掉上一轮加的 `@SuppressWarnings`（留着会被报「冗余禁止」）。
+  同批被标待删除的还有单参构造器（-> `parse`）与 `of`（-> `bySeparator`），本模组没用到。
+- `mods.toml`：`modId` 从 `${mod_id}` 改成字面量 `emipagedbookmarks`。IDEA 的 Forge 插件**不会**
+  展开 Gradle 占位符，于是它眼里这个 mod 根本没被声明 —— 上一轮改成字面量的三个
+  `[[dependencies.emipagedbookmarks]]` 反而被全报成「Mod emipagedbookmarks is not declared」。
+  打包时 expand 只替换占位符、字面量原样保留，**构建产物完全一致**。
+- `gradle.properties`：`forge_version_range` 从 `[47,)` 收紧到 **`[47.4,)`** —— 这是必须的，
+  因为 `fromNamespaceAndPath` 是 Forge 47.4.0 才 backport 来的，更老的 47.x 上会
+  `NoSuchMethodError`。
+- `BookmarkUi.layout()`：去掉多余的 `panel != null` —— `isBookmarkPanel` 本身就带 null 检查，
+  重复写会被报「'null' 检查不必要」。
+- 再次确认另两项**确实**是误报，不动：
+  · `clientSideOnly=true`：47.4.20 的 `ModFileInfo` 源码里明确 `getConfigElement("clientSideOnly")`
+    并置 `__FORGE_clientSideOnly`（已读源码确认）。
+  · `accessTransformers` 必须在 `[[mods]]` 之前：47.4.20 的 `ModFile.java` 是从
+    `modFileInfo.getConfig()`（= 根层）读这个键的；写错只会 warn 并静默退回默认值。
+- `build.gradle` 的 9 条 Mend CVE 警告**不改**：全部是 Forge/Minecraft 自身的可传递依赖
+  （guava / commons-io / netty-handler·codec·common / commons-compress / commons-lang3 /
+  log4j-core / plexus-utils），不是本模组的直接依赖。运行时这些 jar 由 Forge 的 libraries
+  提供，改 build.gradle 里的版本对实机零影响；强行 force 新版本反而可能编不过。
+
 1.0.24 - 2026-09-10
 -------------------
 代码清理：把 IDEA 报的错误与警告逐个过了一遍，**行为零变化**。
@@ -23,9 +52,10 @@ EMI Paged Bookmarks 更新日志
   三个 Screen 覆写 `render` 缺 `@Nonnull`、`fillPadding` 永远返回 0（并入 `IntList.padRowTo`）、
   `GroupOverlay` 里 4 处「参数恒定」的私有方法（贴图 id、clamp 范围、顶点格式、框选色），
   以及 `NOISE_LATTICE` 的 Javadoc 里指向自身的那条 `{@link}`（改成 `{@code}`）。
-- `GroupOverlay` 里 `new ResourceLocation(命名空间, 路径)`：IDEA 报「自 1.20.6 起已弃用并标记为移除」
-  是**误报**（1.20.1 的类文件里没有该注解，已用 javap 确认；`fromNamespaceAndPath` 要 1.20.6 才有），
-  只在那一处加了 `@SuppressWarnings({"deprecation", "removal"})` 并写明原因。
+- `GroupOverlay` 里 `new ResourceLocation(命名空间, 路径)`：当时判断为 IDEA 误报，加了
+  `@SuppressWarnings({"deprecation", "removal"})`。
+  ⚠️ **这个判断是错的，已在 1.0.25 更正并改为真正的迁移**（当时只查了原版 `joined` jar，
+  漏看 javac 实际编译用的 Forge 补丁 jar）。
 
 1.0.23 - 2026-09-10
 -------------------

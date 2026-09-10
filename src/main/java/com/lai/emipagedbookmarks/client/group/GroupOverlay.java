@@ -8,6 +8,7 @@ import org.joml.Matrix4f;
 import org.slf4j.Logger;
 
 import com.google.gson.JsonObject;
+import com.lai.emipagedbookmarks.EmiPagedBookmarksMod;
 import com.lai.emipagedbookmarks.client.BookmarkPages;
 
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -171,13 +172,17 @@ public final class GroupOverlay {
     /**
      * 拼出本模组自己的贴图 id。
      *
-     * <p>1.20.1 的写法就是 {@code new ResourceLocation(命名空间, 路径)}（{@code fromNamespaceAndPath}
-     * 是 1.20.6 才有的）。IDEA 有时会按更高版本的 API 把它标成「已弃用并标记为移除」，
-     * 这里就地压掉这种误报 —— 只压这一个方法，而不是整个类，免得连真正的移除警告一起吞掉。</p>
+     * <p>必须用 {@code fromNamespaceAndPath}，不能写 {@code new ResourceLocation(命名空间, 路径)}：
+     * 后者在 Forge 1.20.1 里被标成 {@code @Deprecated(forRemoval = true)}。这不是 IDEA 误报 ——
+     * <b>Forge 47.4.0</b> 把 1.20.6 的 ResourceLocation 工厂方法 backport 回了 1.20.1，
+     * 同时把三个旧构造器标成待删除（官方给的迁移对照：两参构造器 → {@code fromNamespaceAndPath}、
+     * 单参 → {@code parse}、{@code of} → {@code bySeparator}）。两者字节码完全一样，只差一个告警。</p>
+     *
+     * <p>⚠️ 正因为它来自 47.4 的 backport，{@code mods.toml} 里的 {@code forge_version_range}
+     * 必须 ≥ 47.4，否则在更老的 47.x 上会 {@code NoSuchMethodError}。</p>
      */
-    @SuppressWarnings({ "deprecation", "removal" })
     private static ResourceLocation texture(String path) {
-        return new ResourceLocation("emipagedbookmarks", path);
+        return ResourceLocation.fromNamespaceAndPath(EmiPagedBookmarksMod.MOD_ID, path);
     }
 
     /** 物品之下：植物纹边框（压在图标下面，不挡视线）。 */

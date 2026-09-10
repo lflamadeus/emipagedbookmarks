@@ -176,7 +176,9 @@ public final class BookmarkUi {
     private static Layout layout(EmiScreenManager.SidebarPanel panel) {
         // 条件正着写：mouseScrolled 那边是取反用的，这里保持一次正用，
         // 否则 IDEA 会报「布尔方法 isBookmarkPanel() 的调用总是被取反」。
-        if (panel != null && isBookmarkPanel(panel) && panel.space != null) {
+        // 也不再额外判 panel != null —— isBookmarkPanel 自己就带 null 检查，
+        // 短路求值会挡住后面的 panel.space（多写一次反而被报「多余」）。
+        if (isBookmarkPanel(panel) && panel.space != null) {
             int x = panel.space.tx;
             int y = panel.space.ty - BUTTON_SIZE;
             int right = panel.space.tx + panel.space.tw * BUTTON_SIZE;
