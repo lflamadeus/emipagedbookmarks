@@ -14,7 +14,17 @@ license="${mod_license}"
 #issueTrackerURL="https://change.me.to.your.issue.tracker.example.invalid/" #optional
 # If your mod is purely client-side and has no multiplayer functionality (be it dedicated servers or Open to LAN),
 # set this to true, and Forge will set the correct displayTest for you and skip loading your mod on dedicated servers.
-#clientSideOnly=true #optional - defaults to false if absent
+# 本模组是纯客户端 UI（EMI 的分页书签/分组/花草边框），联机时对服务端没有意义：
+# clientSideOnly=true 会让 Forge 自动用 IGNORE_ALL_VERSION，并跳过专用服务端加载。
+clientSideOnly=true #optional - defaults to false if absent
+# Access Transformers
+# Optional, if not specified Forge will attempt to find the default META-INF/accesstransformer.cfg and silently continue if not found. May default to an empty list in a future MC.
+# If you specify AT path strings in this list, Forge will attempt to load each of them and throw errors for any that aren't found.
+# Specifying an empty list when your mod has no ATs is recommended to opt-out of the default for slightly better loading performance.
+# 必须在 [[mods]] 之前：Forge 是从 mods.toml 的根层读这个键的（ModFile.getConfigElement("accessTransformers")），
+# 写在 [[mods]] 之后会被 TOML 归到该模组条目里，等于没写。
+accessTransformers = []
+
 # A list of mods - how many allowed here is determined by the individual mod loader
 [[mods]] #mandatory
 # The modid of the mod
@@ -41,16 +51,12 @@ authors="${mod_authors}" #optional
 # IMPORTANT NOTE: this is NOT an instruction as to which environments (CLIENT or DEDICATED SERVER) your mod loads on. Your mod should load (and maybe do nothing!) whereever it finds itself.
 #displayTest="MATCH_VERSION" # if nothing is specified, MATCH_VERSION is the default when clientSideOnly=false, otherwise IGNORE_ALL_VERSION when clientSideOnly=true (#optional)
 
-# Access Transformers
-# Optional, if not specified Forge will attempt to find the default META-INF/accesstransformer.cfg and silently continue if not found. May default to an empty list in a future MC.
-# If you specify AT path strings in this list, Forge will attempt to load each of them and throw errors for any that aren't found.
-# Specifying an empty list when your mod has no ATs is recommended to opt-out of the default for slightly better loading performance.
-#accessTransformers = []
-
 # The description text for the mod (multi line!) (#mandatory)
 description='''${mod_description}'''
 # A dependency - use the . to indicate dependency for a specific modid. Dependencies are optional.
-[[dependencies.${mod_id}]] #optional
+# 依赖表的键必须写成合法 TOML：${mod_id} 这种未加引号的占位符只在打包时才被替换，
+# 源码里是非法语法（IDEA 会报 "应为 <key segment>"），所以这里直接写死模组 id。
+[[dependencies.emipagedbookmarks]] #optional
     # the modid of the dependency
     modId="forge" #mandatory
     # Does this dependency have to exist - if not, ordering below must be specified
@@ -64,7 +70,7 @@ description='''${mod_description}'''
     # Side this dependency is applied on - BOTH, CLIENT, or SERVER
     side="BOTH"
 # Here's another dependency
-[[dependencies.${mod_id}]]
+[[dependencies.emipagedbookmarks]]
     modId="minecraft"
     mandatory=true
     # This version range declares a minimum of the current minecraft version up to but not including the next major version
@@ -72,10 +78,12 @@ description='''${mod_description}'''
     ordering="NONE"
     side="BOTH"
 
-[[dependencies.${mod_id}]]
+[[dependencies.emipagedbookmarks]]
     modId="emi"
     mandatory=false
-    versionRange="[1.1.24,1.1.25)"
+    # 只保证 1.1.24 起可用；真正的开关在 EmiMixinConfigPlugin（按主次版本前缀判定并打日志）。
+    # 这里放宽上界，避免 EMI 出 1.1.25 时 Forge 先在模组列表里报一个依赖不满足。
+    versionRange="[1.1.24,)"
     ordering="AFTER"
     side="CLIENT"
 
@@ -85,5 +93,5 @@ description='''${mod_description}'''
 # Features are specific properties of the game environment, that you may want to declare you require. This example declares
 # that your mod requires GL version 3.2 or higher. Other features will be added. They are side aware so declaring this won't
 # stop your mod loading on the server for example.
-#[features.${mod_id}]
+#[features.emipagedbookmarks]
 #openGLVersion="[3.2,)"

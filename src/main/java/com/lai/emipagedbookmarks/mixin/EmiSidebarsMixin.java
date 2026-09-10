@@ -14,7 +14,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(EmiSidebars.class)
 public abstract class EmiSidebarsMixin {
-    @Inject(method = "getStacks", at = @At("RETURN"), cancellable = true)
+    @Inject(method = "getStacks(Ldev/emi/emi/config/SidebarType;)Ljava/util/List;",
+            at = @At("RETURN"), cancellable = true)
     private static void emipagedbookmarks$filterFavorites(SidebarType type, CallbackInfoReturnable<List<? extends EmiIngredient>> callbackInfo) {
         if (type == SidebarType.FAVORITES) {
             callbackInfo.setReturnValue(BookmarkPages.visibleFavorites());

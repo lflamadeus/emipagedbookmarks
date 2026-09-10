@@ -15,7 +15,14 @@ import org.spongepowered.asm.mixin.extensibility.IMixinInfo;
 
 public final class EmiMixinConfigPlugin implements IMixinConfigPlugin {
     private static final String EMI_MOD_ID = "emi";
-    private static final String EMI_VERSION = "1.1.24+1.20.1+forge";
+    /**
+     * 支持的 EMI 主版本前缀。
+     *
+     * <p>EMI 打的是 {@code 1.1.24+1.20.1+forge} 这种复合版本号，补丁号一变就完全对不上，
+     * 所以这里只比主次版本前缀。真实兼容性判定只能靠实机；一旦版本对不上，宁可全部关掉
+     * （并在日志里明确写出来），也不要半开半关地留下难以排查的怪现象。</p>
+     */
+    private static final String EMI_VERSION_PREFIX = "1.1.24";
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final AtomicBoolean DIAGNOSTIC_LOGGED = new AtomicBoolean();
     private static volatile Boolean compatible;
@@ -28,12 +35,16 @@ public final class EmiMixinConfigPlugin implements IMixinConfigPlugin {
         synchronized (EmiMixinConfigPlugin.class) {
             if (compatible == null) {
                 String actualVersion = findEmiVersion();
-                boolean detected = EMI_VERSION.equals(actualVersion);
+                boolean detected = actualVersion != null && actualVersion.startsWith(EMI_VERSION_PREFIX);
                 if (actualVersion == null) {
-                    logDiagnostic("EMI was not found in the loading mod list; skipping all EMI mixins");
+                    log("EMI was not found in the loading mod list; skipping all EMI mixins", false);
+                } else if (detected) {
+                    log("Detected EMI version " + actualVersion + "; mixins enabled", false);
                 } else {
-                    logDiagnostic("Detected EMI version " + actualVersion + "; required " + EMI_VERSION
-                            + "; mixins enabled=" + detected);
+                    log("Detected EMI version " + actualVersion + " but this build only supports "
+                            + EMI_VERSION_PREFIX + ".x; ALL EMI mixins are disabled, so paged bookmarks, "
+                            + "groups and the flower borders will not appear. Update this mod or downgrade EMI.",
+                            true);
                 }
                 compatible = detected;
             }
@@ -58,9 +69,13 @@ public final class EmiMixinConfigPlugin implements IMixinConfigPlugin {
         return null;
     }
 
-    private static void logDiagnostic(String message) {
+    private static void log(String message, boolean warn) {
         if (DIAGNOSTIC_LOGGED.compareAndSet(false, true)) {
-            LOGGER.info("[EMI Paged Bookmarks] {}", message);
+            if (warn) {
+                LOGGER.warn("[EMI Paged Bookmarks] {}", message);
+            } else {
+                LOGGER.info("[EMI Paged Bookmarks] {}", message);
+            }
         }
     }
 

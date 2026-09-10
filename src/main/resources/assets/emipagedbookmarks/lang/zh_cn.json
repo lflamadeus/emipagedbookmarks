@@ -1,1 +1,19 @@
-{"screen.emipagedbookmarks.rename":"重命名书签分页","screen.emipagedbookmarks.page_name":"分页名称","screen.emipagedbookmarks.delete_title":"删除书签分页？","screen.emipagedbookmarks.delete_message":"此分页中的书签将移动到前一个分页。","tooltip.emipagedbookmarks.add_page":"新增书签分页","tooltip.emipagedbookmarks.delete_page":"删除当前分页（Shift 跳过确认）","tooltip.emipagedbookmarks.page":"可按住 Shift 滚轮切换"}
+{
+    "screen.emipagedbookmarks.rename": "重命名书签分页",
+    "screen.emipagedbookmarks.page_name": "分页名称",
+    "screen.emipagedbookmarks.delete_title": "删除书签分页？",
+    "screen.emipagedbookmarks.delete_message": "此分页中的书签将移动到前一个分页，重复的书签会自动合并。",
+    "screen.emipagedbookmarks.menu": "分页操作",
+    "screen.emipagedbookmarks.export_page": "导出此分页",
+    "screen.emipagedbookmarks.export_all": "导出全部分页",
+    "screen.emipagedbookmarks.import": "导入…",
+    "screen.emipagedbookmarks.import_title": "选择要导入的文件",
+    "screen.emipagedbookmarks.import_empty": "bookmark_pages 文件夹里还没有 json 文件",
+    "tooltip.emipagedbookmarks.add_page": "新增书签分页",
+    "tooltip.emipagedbookmarks.delete_page": "删除当前分页（Shift 跳过确认）",
+    "tooltip.emipagedbookmarks.page": "可按住 Shift 滚轮切换，拖动可调整顺序，右键打开操作菜单",
+    "message.emipagedbookmarks.exported": "已导出：%s",
+    "message.emipagedbookmarks.export_failed": "导出失败，请查看日志",
+    "message.emipagedbookmarks.imported": "已导入 %s 个分页",
+    "message.emipagedbookmarks.import_failed": "导入失败，文件格式不正确：%s"
+}

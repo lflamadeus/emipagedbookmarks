@@ -1,5 +1,7 @@
 package com.lai.emipagedbookmarks.client;
 
+import javax.annotation.Nonnull;
+
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
@@ -39,7 +41,7 @@ public final class RenamePageScreen extends Screen {
     }
 
     @Override
-    public void render(GuiGraphics graphics, int mouseX, int mouseY, float delta) {
+    public void render(@Nonnull GuiGraphics graphics, int mouseX, int mouseY, float delta) {
         renderBackground(graphics);
         graphics.drawCenteredString(font, title, width / 2, this.height / 2 - 52, 0xFFFFFF);
         super.render(graphics, mouseX, mouseY, delta);

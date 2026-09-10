@@ -15,7 +15,9 @@ public final class ClientEvents {
     @SubscribeEvent
     public static void onClientSetup(FMLClientSetupEvent event) {
         if (ModList.get().isLoaded("emi")) {
-            BookmarkPages.initialize();
+            // FMLClientSetupEvent 跑在模组加载线程上；initialize() 会读 EMI 的收藏表、必要时还会
+            // 写 bookmarks.json，按 FML 约定丢回客户端主线程再跑。
+            event.enqueueWork(BookmarkPages::initialize);
         }
     }
 }

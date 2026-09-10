@@ -8,6 +8,7 @@
     "EmiFavoritesMixin",
     "EmiSidebarsMixin",
     "EmiScreenManagerMixin",
+    "ScreenSpaceMixin",
     "SidebarPanelMixin"
   ]
 }
