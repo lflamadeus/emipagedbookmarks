@@ -1,5 +1,20 @@
 EMI Paged Bookmarks 更新日志
 
+1.0.26 - 2026-09-12
+-------------------
+**修复 1.0.25 的崩溃**：打开背包（EMI 侧栏渲染）时抛
+`IllegalClassLoadError: ...mixin.ScreenSpaceMixin$LayoutCache is in a defined mixin package ... and cannot be referenced directly`。
+- **原因**：1.0.24 为了绕开 Mixin 的「新增成员必须 `@Unique` 且名字含 `_`/`$`」规则，
+  把排布缓存字段塞进了 `ScreenSpaceMixin` 的**嵌套静态类** `LayoutCache`（当时以为嵌套类不算新增成员）。
+  但 `mixins.json` 声明了 `"package": "...mixin"`，**该包下的任何类（含嵌套类）都归 Mixin 游戏包管理器管，
+  禁止被包外代码直接引用**。而注入的方法体会被合并进目标类 `EmiScreenManager$ScreenSpace`（EMI 的包），
+  方法体里对 `LayoutCache` 的引用就成了一次跨包直接引用 → 加载时直接抛异常。
+- **修法**：`LayoutCache` 与 `IntList` 移出 mixin 包，落到 `com.lai.emipagedbookmarks.client`
+  （普通包、非 `@Mixin` 类 → 既不是「会被灌注进目标类的新增成员」，也没有包可见性限制）。
+  mixin 包里现在只剩 `@Mixin` 类，以及 `IMixinConfigPlugin` 实现（那是 Mixin 明确支持的例外）。
+- 教训写进项目记忆：**mixin 包下只能放 `@Mixin` 类本身，任何被普通代码或注入方法体引用的辅助类型
+  都必须放到别的包里。**
+
 1.0.25 - 2026-09-11
 -------------------
 第二轮 IDEA 报错清理。这一轮修的是**真问题**，含更正上一轮判断错的一处。
@@ -45,6 +60,7 @@ EMI Paged Bookmarks 更新日志
   快照状态补 `@Unique`、两个快照辅助方法加 `emipagedbookmarks$` 前缀。Mixin 会把这些「新增成员」
   灌注进目标类，所以它们必须带 `@Unique` 且名字含 `_`/`$`，否则可能与 EMI 自己的成员撞名
   （IDEA 的 Mixin 检查也会一直报）。
+  ⚠️ **「挪进嵌套类」这个做法是错的，已在 1.0.26 修正**（嵌套类仍在 mixin 包下，禁止跨包引用 → 崩溃）。
 - 顺手清理：冗余空赋值（两处 UUID 解析、一处反序列化，抽成小工具方法）、`File.mkdirs()` 返回值被
   忽略（改用会抛异常的 `Files.createDirectories`）、手工解码改 `Files.readString`、
   `BookmarkPages.removeCurrentPage()` 去掉没人用的 boolean 返回值、

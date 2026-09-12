@@ -1,20 +1,19 @@
 package com.lai.emipagedbookmarks.mixin;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
 import com.lai.emipagedbookmarks.client.BookmarkPages;
+import com.lai.emipagedbookmarks.client.IntList;
+import com.lai.emipagedbookmarks.client.LayoutCache;
 import com.lai.emipagedbookmarks.client.LayoutVersion;
 import com.lai.emipagedbookmarks.client.group.FavoriteGroup;
 import com.lai.emipagedbookmarks.client.group.GroupManager;
 
 import dev.emi.emi.api.stack.EmiIngredient;
-import dev.emi.emi.api.stack.EmiStack;
 import dev.emi.emi.config.SidebarType;
 import dev.emi.emi.screen.EmiScreenManager.ScreenSpace;
-import net.minecraft.world.item.ItemStack;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -28,6 +27,15 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
  * 而结果只随「分页 / 布局版本 / 每行列数 / 临时收藏条数」变化。因此这里按这四个条件
  * 缓存整页排布，命中时直接返回上次构建的列表与下标映射，不再重建 —— 这是收藏越多
  * 越占显卡那条曲线的主要来源（原先每次调用都要对全部收藏重建 HashSet 并逐项装箱）。</p>
+ *
+ * <p><b>辅助类型一律不放在本包。</b>{@code mixins.json} 声明的 {@code package} 下的<b>任何类</b>
+ * （含嵌套类）都归 Mixin 游戏包管理器管，<b>不允许被该包之外的代码直接引用</b>。
+ * 而本 mixin 的方法体会被合并进目标类 {@code EmiScreenManager$ScreenSpace}（EMI 的包），
+ * 方法体里对嵌套类的引用就成了跨包引用，加载时抛
+ * {@code IllegalClassLoadError: ... is in a defined mixin package ... and cannot be referenced directly}。
+ * 因此排布缓存的状态（{@link com.lai.emipagedbookmarks.client.LayoutCache}）与
+ * 构建期用的极简 int 列表（{@link com.lai.emipagedbookmarks.client.IntList}）
+ * 都放在 {@code client} 包 —— 本包下只能有 {@code @Mixin} 类本身。</p>
  */
 @Mixin(ScreenSpace.class)
 public class ScreenSpaceMixin {
@@ -138,61 +146,5 @@ public class ScreenSpaceMixin {
             LayoutCache.cachedOutputToVisible = outputToVisibleArray;
         }
         callbackInfo.setReturnValue(result);
-    }
-
-    /**
-     * 整页排布缓存的全部状态。
-     *
-     * <p>特意放进嵌套类：Mixin 会把 mixin 类<b>新增的成员</b>灌注进目标类，所以直接写在
-     * {@code ScreenSpaceMixin} 里的字段必须带 {@code @Unique}、名字里还得有 {@code _} 或 {@code $}，
-     * 否则既可能与 EMI 自己的成员撞名，IDEA 的 Mixin 检查也会一直报
-     * "Missing @Unique annotation" / "Name does not match the pattern for added mixin members"。
-     * 放进嵌套类后它们属于另一个类，既不污染 {@code ScreenSpace}，也不必为检查而改名。</p>
-     */
-    private static final class LayoutCache {
-        /** 缓存命中与重建共用同一把锁（渲染线程单线程访问，但保证可见性）。 */
-        private static final Object LOCK = new Object();
-        private static UUID cachedPage;
-        private static int cachedPerRow = -1;
-        private static int cachedPageSize = -1;
-        private static long cachedVersion = Long.MIN_VALUE;
-        private static int cachedSynthetic = -1;
-        private static List<EmiIngredient> cachedStacks = List.of();
-        private static int[] cachedVisibleToOutput = new int[0];
-        private static int[] cachedOutputToVisible = new int[0];
-    }
-
-    /**
-     * 避免 {@code ArrayList<Integer>} 逐项装箱的极简 int 列表（结果会被缓存，只用于构建期）。
-     */
-    private static final class IntList {
-        private int[] data;
-        private int size;
-
-        IntList(int capacity) {
-            this.data = new int[Math.max(8, capacity)];
-        }
-
-        void add(int value) {
-            if (size == data.length) {
-                data = Arrays.copyOf(data, size * 2);
-            }
-            data[size++] = value;
-        }
-
-        int[] toArray() {
-            return Arrays.copyOf(data, size);
-        }
-
-        /**
-         * 把当前行补满到 {@code perRow} 格：本表补 -1（占位，不指向任何收藏），
-         * 并行的物品表补一个空气堆，让换行分组从下一行开头开始排。
-         */
-        void padRowTo(int column, int perRow, List<EmiIngredient> output) {
-            for (int i = column; i < perRow; i++) {
-                add(-1);
-                output.add(EmiStack.of(ItemStack.EMPTY));
-            }
-        }
     }
 }
