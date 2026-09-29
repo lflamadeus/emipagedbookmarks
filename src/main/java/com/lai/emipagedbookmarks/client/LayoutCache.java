@@ -9,7 +9,9 @@ import dev.emi.emi.api.stack.EmiIngredient;
  * {@code ScreenSpaceMixin} 里「整页排布缓存」的全部状态。
  *
  * <p>EMI 每帧会从多处调用 {@code ScreenSpace.getStacks()}（hover 判定、翻页、滚动、渲染主循环），
- * 而结果只随「分页 / 布局版本 / 每行列数 / 每页容量 / 临时收藏条数」变化，所以整页排布按这五项缓存。
+ * 而结果只随「分页 / 布局版本 / 行宽剖面 / 临时收藏条数」变化，所以整页排布按这四项缓存。
+ * 行宽剖面（{@code ScreenSpace.widths} 的内容）同时决定了每行列数与每页容量，界面遮罩一变它就变，
+ * 因此不必再单独记 {@code tw} 与 {@code pageSize}。
  * 缓存逻辑留在 mixin 里（它要拦截 {@code getStacks}），状态放在这里。</p>
  *
  * <h2>⚠️ 为什么不能写成 mixin 的嵌套类</h2>
@@ -38,8 +40,8 @@ public final class LayoutCache {
     /** 缓存命中与重建共用同一把锁（渲染线程单线程访问，但保证可见性）。 */
     public static final Object LOCK = new Object();
     public static UUID cachedPage;
-    public static int cachedPerRow = -1;
-    public static int cachedPageSize = -1;
+    /** 上一次排布用的行宽剖面（{@code ScreenSpace.widths} 的副本），逐项相等才复用缓存。 */
+    public static int[] cachedRowWidths = new int[0];
     public static long cachedVersion = Long.MIN_VALUE;
     public static int cachedSynthetic = -1;
     public static List<EmiIngredient> cachedStacks = List.of();
