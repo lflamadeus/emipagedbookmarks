@@ -437,7 +437,11 @@ public final class GroupOverlay {
         }
 
         Matrix4f pose = graphics.pose().last().pose();
-        int total = Math.min(groupBorderColor.length, groupRectCount.length);
+        // 循环上界必须是**本次**的分组数，不能取数组长度：groupRectStart / groupRectCount /
+        // groupBorderColor 都是按容量复用、不随分组减少而清空的，buildRects 也只重写
+        // [0, groups.size()) 这一段。翻到分组更少的一页时，尾部还留着上一页的切片，
+        // 按数组长度遍历就会把已经不存在的分组框一起画出来（表现为翻页后挂着空分组框）。
+        int groupCount = Math.min(groups.size(), groupRectCount.length);
 
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
@@ -446,7 +450,7 @@ public final class GroupOverlay {
         RenderSystem.setShader(GameRenderer::getPositionColorShader);
 
         BufferBuilder buffer = beginQuads(graphics);
-        for (int g = 0; g < total; g++) {
+        for (int g = 0; g < groupCount; g++) {
             int color = groupBorderColor[g];
             int count = groupRectCount[g];
             int base = groupRectStart[g];
