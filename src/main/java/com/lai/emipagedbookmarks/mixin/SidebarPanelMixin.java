@@ -13,7 +13,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(EmiScreenManager.SidebarPanel.class)
 public abstract class SidebarPanelMixin {
     @Inject(method = "render(Ldev/emi/emi/runtime/EmiDrawContext;IIF)V", at = @At("HEAD"))
-    private void emipagedbookmarks$renderBackground(EmiDrawContext context, int mouseX, int mouseY, float delta,
+    private void emipagedbookmarks$hideNativeButtons(EmiDrawContext context, int mouseX, int mouseY, float delta,
             CallbackInfo callbackInfo) {
         EmiScreenManager.SidebarPanel panel = (EmiScreenManager.SidebarPanel) (Object) this;
         if (panel.getType() == dev.emi.emi.config.SidebarType.FAVORITES) {
@@ -21,14 +21,19 @@ public abstract class SidebarPanelMixin {
             panel.cycle.visible = false;
             panel.pageRight.visible = false;
         }
-        GroupOverlay.renderBackground(context, panel, mouseX, mouseY);
     }
 
+    /**
+     * 分组轮廓与框选预览画在 TAIL，也就是压在物品图标之上。
+     *
+     * <p>EMI 的条目是 18x18、物品贴图 16x16，四边各留 1px 透明边距，2px 的轮廓正好落在图标
+     * 边缘上：既完整可见、又不会盖住图标内容。画在 HEAD（物品之下）的话只有 1px 能露出来。</p>
+     */
     @Inject(method = "render(Ldev/emi/emi/runtime/EmiDrawContext;IIF)V", at = @At("TAIL"))
-    private void emipagedbookmarks$renderForeground(EmiDrawContext context, int mouseX, int mouseY, float delta,
+    private void emipagedbookmarks$renderOverlay(EmiDrawContext context, int mouseX, int mouseY, float delta,
             CallbackInfo callbackInfo) {
         EmiScreenManager.SidebarPanel panel = (EmiScreenManager.SidebarPanel) (Object) this;
-        GroupOverlay.renderForeground(context, panel, mouseX, mouseY);
+        GroupOverlay.render(context, panel, mouseX, mouseY);
         BookmarkUi.render(context, panel, mouseX, mouseY);
     }
 

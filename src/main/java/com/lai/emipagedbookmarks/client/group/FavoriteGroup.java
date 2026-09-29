@@ -13,13 +13,6 @@ public final class FavoriteGroup {
     private int endIndex;
     private boolean folded;
     private boolean lineBreak;
-    /**
-     * 边框散点（抖动层）的随机种子。
-     *
-     * <p>散点掩码不是每帧现算的：分组创建时随机出一个种子存进配置文件，绘制期只拿它去查一张
-     * 全局随机表。同一个分组永远得到同一片散点，改配置、重开游戏都不变；想换一片形状就改这个值。</p>
-     */
-    private int seed = new java.util.Random().nextInt();
 
     public FavoriteGroup(UUID id, int startIndex, int endIndex) {
         this.id = id;
@@ -29,14 +22,6 @@ public final class FavoriteGroup {
 
     public UUID id() {
         return id;
-    }
-
-    public int seed() {
-        return seed;
-    }
-
-    public void seed(int seed) {
-        this.seed = seed;
     }
 
     public int startIndex() {
@@ -86,7 +71,6 @@ public final class FavoriteGroup {
         json.addProperty("end", endIndex);
         json.addProperty("folded", folded);
         json.addProperty("lineBreak", lineBreak);
-        json.addProperty("seed", seed);
         return json;
     }
 
@@ -97,10 +81,6 @@ public final class FavoriteGroup {
                 json.has("end") ? json.get("end").getAsInt() : 0);
         group.folded(json.has("folded") && json.get("folded").getAsBoolean());
         group.lineBreak(json.has("lineBreak") && json.get("lineBreak").getAsBoolean());
-        // 旧文件没有 seed 字段：构造函数已经随机了一个，直接用即可。
-        if (json.has("seed")) {
-            group.seed(json.get("seed").getAsInt());
-        }
         return group;
     }
 
